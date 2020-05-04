@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Hook to validate a commit message.
+#
+# Copyright (c) 2020 Kinvolk GmbH
+# Author: Joaquim Rocha <joaquim@kinvolk.io>
+
+# Enable input
+exec < /dev/tty
+
+# It's convenient to ask the user if they want to reopen the message.
+function exit_with_prompt() {
+    echo "Do you want to edit again (declining will quit the commit)? (Y/n, or 'a' if you were amending the commit)"
+    read -p ""
+
+    ammend=""
+    if [[ $REPLY =~ ^(A|a| ) ]]; then
+        amend=1
+    fi
+    if [[ $REPLY =~ ^(yes|y| ) ]] || [[ -z $REPLY ]] || [ ! -z $amend ]; then
+        # Check if this was an amend
+        if git diff --cached --quiet HEAD --; then
+            read -p "You have no staged changes, were you amending a commit? (Y/n)"
+            if [[ $REPLY =~ ^(yes|y| ) ]] || [[ -z $REPLY ]]; then
+                amend=1
+            fi
+        fi
+
+        # Set up amend if needed
+        if [ ! -z $amend ]; then
+            amend="--amend"
+        fi
+
+        git commit $amend -eF .git/COMMIT_EDITMSG
+    fi
+    exit 1
+}
+
+lines=()
+lines_over_max_length=()
+
+while read line; do
+    # Skip comments
+    if [ "${line:0:1}" == "#" ]; then
+        continue
+    fi
+    lines+=("${line}")
+done < "$1"
+
+if [ "${lines[0]}" == "" ]; then
+    echo "The 1st line in the commit message cannot be blank."
+    exit_with_prompt
+fi
+
+# Check if the second line (when it exists) is blank.
+second_line="${lines[1]}"
+if [ ${#lines[@]} -ge 1 ] && [ "${second_line}" != "" ]; then
+    echo "The 2nd line in the commit message needs to be blank, it is:"
+    echo "$second_line"
+    exit_with_prompt
+fi
+
+# Get all body lines that exceed the length limit
+for line in "${lines[@]}"; do
+    if [ ${#line} -gt 72 ]; then
+        lines_over_max_length+=("${line}")
+    fi
+done
+
+# Warn about lines exceeding the limit.
+if [ ${#lines_over_max_length[@]} -ge 1 ]; then
+    echo "The following commit body lines exceed the 72 character limit:"
+
+    for line in "${lines_over_max_length[@]}"; do
+        echo "${#line} chars: ${line}"
+    done
+
+    exit_with_prompt
+fi
+
+exit 0
