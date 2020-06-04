@@ -28,13 +28,14 @@ for hook in ${hooks[@]}; do
   hook_name=$(basename "${hook}")
   hook_src_path="$HOOKS_SRC/$hook_name"
   hook_dest_path="$HOOKS_DEST/$hook_name"
+  link_dest="$(realpath --relative-to="${HOOKS_DEST}" "${HOOKS_SRC}")"
   if [ -L "${hook_dest_path}" ]; then
     echo "Not installing $hook_src_path: $hook_dest_path already exists!"
   elif [ -e "${hook_dest_path}" ]; then
     echo "Not installing $hook_src_path: $hook_dest_path already exists!"
   else
     echo -e "Installing $hook_src_path\t->\t$hook_dest_path\n"
-    ln -s "${hook_src_path}" "${hook_dest_path}"
+    ln -s "${link_dest}/${hook_name}" "${hook_dest_path}"
   fi
 done
 
