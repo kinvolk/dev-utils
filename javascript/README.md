@@ -1,0 +1,3 @@
+# Javascript
+
+See [Typescript](../typescript/).
