@@ -1,9 +1,4 @@
-<h1 align="center">
-  <br>
-  <img src="https://avatars2.githubusercontent.com/u/14073052?s=200&v=4" alt="Kinvolk" width="160">
-</h1>
-
-# Kinvolk Dev Utils
+# Kinvolk Dev Utils <img align="right" src="https://avatars2.githubusercontent.com/u/14073052?s=200&v=4" alt="Kinvolk" width="160">
 
 Common development utilities for Kinvolk's projects.
 
